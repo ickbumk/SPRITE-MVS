@@ -143,6 +143,7 @@ def read_images(img_path, grayscale = False):
     
         
     for img_filename in img_filenames:
+        print(f'Reading image: {img_filename}')
         if grayscale:
             img = cv2.imread(img_filename, cv2.IMREAD_GRAYSCALE) 
         else:

@@ -13,9 +13,11 @@ class spriteMVS:
         self.row, self.col = int(row/factor), int(col/factor)
         self.thresh = thresh
         self.rdd = rdd
+        self.dmin = dmin
+        self.nPlane = nPlane
+        self.dmax = dmax
 
-        self.dList = cp.linspace(dmin, dmax, nPlane)
-        self.dd = self.dList[1] - self.dList[0]
+        
         
         self.zList = []
         self.plist = []
@@ -77,6 +79,7 @@ class spriteMVS:
         self.rlist = self.rlist[1:]
         self.plist = self.plist[1:]
         self.klist = self.klist[1:]
+        self.tlist = self.tlist[1:]
         self.imglist = self.imglist[1:]
         self.gradlist = self.gradlist[1:]
         self.imgflatlist = self.imgflatlist[1:]
@@ -108,6 +111,10 @@ class spriteMVS:
         
     def sparse(self):
 
+        self.dList = cp.linspace(self.dmin, self.dmax, self.nPlane)
+        self.dd = self.dList[1] - self.dList[0]
+
+
         pts = self.getPlanes()
 
         startTime = time.time()
@@ -122,18 +129,18 @@ class spriteMVS:
         rgbSim = similarityRGB(rgbPair, self.imgflatlist[5][None, None, :, :])
         gradSim = similarityGrad(gradPair, self.gradflatlist[5][None, None, :, :])
         combinedSim = gradSim * rgbSim
-        combinedSim = gradSim
+        # combinedSim = gradSim
         
         combinedSim = combinedSim.reshape(combinedSim.shape[0], combinedSim.shape[1], self.row, self.col)
 
         combinedSim = median_filter(combinedSim, size = (1, 1, 5, 5)).reshape(combinedSim.shape[0], -1, self.col * self.row)        # (ncam, nplane, ncol*nrow)
         
         depthIdx = self.score_oct(combinedSim)
-        print(combinedSim.shape)
+        # print(combinedSim.shape)
         # depthIdx = cp.argmax(cp.nanmean(combinedSim, axis = 0), axis = 0)
         
         endTime = time.time()
-        print(f'Time taken: {endTime-startTime} seconds')
+        print(f'Sparse: {(endTime-startTime):04f} seconds')
         
         self.depthIdx = depthIdx
         
@@ -145,8 +152,6 @@ class spriteMVS:
 
         maskSparse = idx == -1
 
-        # safe_idx = cp.clip(idx, 0, self.nPlane - 1)
-        # result = self.dList[safe_idx].copy()
         result = self.dList[idx].copy()
         result[maskSparse] = cp.nan
 
@@ -159,8 +164,6 @@ class spriteMVS:
             self.dd,
             dtype=cp.float32
         )
-
-
 
         for iteration in range(N):
             startTime = time.time()
@@ -337,6 +340,10 @@ class spriteMVS:
         )
 
         valid = np.isfinite(depth) & (depth > 0)
+
+        if np.count_nonzero(valid) == 0:
+            print("No valid depth points found.")
+            return
 
         z = depth[valid]
         u = xx[valid]
