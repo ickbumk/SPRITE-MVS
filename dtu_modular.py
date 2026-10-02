@@ -18,8 +18,8 @@ def parse_args():
     parser.add_argument('--pairfile', type=str, default=pairfile)
     parser.add_argument('--redundancy', type=int, default=redundancy)
     parser.add_argument('--threshold', type=float, default=threshold)
-    parser.add_argument('--octreeN', type=float, default= 3)
-    parser.add_argument('--downsampleFactor', type=float, default= 5)
+    parser.add_argument('--octreeN', type=int, default= 3)
+    parser.add_argument('--downsampleFactor', type=int, default= 5)
     parser.add_argument('--imageIdx', type=int, default=0)
     return parser.parse_args()
 
@@ -51,7 +51,7 @@ def main():
         row=total_img[0].shape[0],
         col=total_img[0].shape[1],
         thresh=args.threshold,
-        rdd=args.octreeN
+        rdd=args.redundancy
     )
 
     for idxx, img_iter in enumerate(img_ref):
